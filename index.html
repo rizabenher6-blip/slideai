@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SlideAI — Free AI Presentation Maker</title>
+<meta name="description" content="Turn any idea into a beautiful presentation in seconds. Free forever, powered by AI."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;
+  --surface:#13131a;
+  --surface2:#1c1c26;
+  --border:#2a2a3a;
+  --border2:#3a3a50;
+  --text:#f0f0f5;
+  --muted:#8888aa;
+  --accent:#7c6fea;
+  --accent2:#5a4fd4;
+  --radius:10px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:15px}
+
+/* ── LAYOUT ── */
+.app{min-height:100vh;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--surface)}
+.logo{font-size:18px;font-weight:600;letter-spacing:-0.3px}
+.logo span{color:var(--accent)}
+.header-tag{font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:20px}
+
+/* ── AD SLOTS ── */
+.ad-slot{background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:10px}
+.ad-label{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted)}
+.ad-text{font-size:11px;color:var(--muted)}
+
+/* ── HOME ── */
+#homeScreen{flex-direction:row}
+.home-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;gap:28px}
+.home-sidebar{width:170px;border-left:1px solid var(--border);background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:12px}
+
+.hero{text-align:center;max-width:480px}
+.hero h1{font-size:32px;font-weight:600;line-height:1.25;letter-spacing:-0.5px;margin-bottom:12px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{font-size:15px;color:var(--muted);line-height:1.6}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:100%;max-width:540px}
+.card textarea{width:100%;background:transparent;border:none;outline:none;font-size:14px;color:var(--text);font-family:inherit;resize:none;min-height:80px;line-height:1.7;caret-color:var(--accent)}
+.card textarea::placeholder{color:var(--muted)}
+.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);gap:10px;flex-wrap:wrap}
+select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;font-size:12px;color:var(--text);font-family:inherit;cursor:pointer;outline:none}
+select:focus{border-color:var(--accent)}
+
+.pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{padding:5px 11px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:transparent;cursor:pointer;color:var(--muted);transition:all 0.15s;font-family:inherit}
+.pill:hover{border-color:var(--accent);color:var(--text)}
+.pill.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.btn-gen{background:var(--accent);color:#fff;border:none;padding:9px 22px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.15s;font-family:inherit;white-space:nowrap}
+.btn-gen:hover{background:var(--accent2)}
+.btn-gen:disabled{opacity:0.5;cursor:not-allowed}
+.btn-gen svg{width:14px;height:14px}
+
+.in-feed-ad{width:100%;max-width:540px;height:64px;border-radius:10px;flex-direction:row;gap:14px}
+
+.api-hint{font-size:11px;color:var(--muted);text-align:center}
+.api-hint button{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;font-family:inherit}
+.api-hint button:hover{color:var(--text)}
+
+/* ── LOADING ── */
+#loadScreen{align-items:center;justify-content:center;gap:18px}
+.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-size:15px;color:var(--muted)}
+.load-step{font-size:13px;color:var(--muted);opacity:0.7}
+.load-ad{margin-top:20px;width:340px;height:180px}
+
+/* ── VIEWER ── */
+#viewerScreen{flex-direction:row}
+.viewer-main{flex:1;display:flex;flex-direction:column}
+.viewer-sidebar{width:170px;border-left:1px solid var(--border);background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:12px}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);background:var(--surface);gap:8px;flex-wrap:wrap}
+.nav{display:flex;align-items:center;gap:6px}
+.nav-btn{background:transparent;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:12px;cursor:pointer;color:var(--text);transition:background 0.15s;font-family:inherit}
+.nav-btn:hover{background:var(--surface2)}
+.counter{font-size:12px;color:var(--muted);min-width:52px;text-align:center}
+.tool-ad{flex:1;max-width:280px;height:36px;flex-direction:row;gap:8px;border-radius:6px}
+.exports{display:flex;gap:5px}
+.btn-exp{background:transparent;border:1px solid var(--border);border-radius:var(--radius);padding:6px 12px;font-size:11px;cursor:pointer;color:var(--muted);transition:all 0.15s;font-family:inherit}
+.btn-exp:hover{background:var(--surface2);color:var(--text)}
+.btn-new{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:var(--radius);padding:6px 14px;font-size:11px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.btn-new:hover{background:var(--accent);color:#fff}
+
+.canvas{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.slide{width:100%;max-width:680px;aspect-ratio:16/9;border-radius:12px;display:flex;flex-direction:column;justify-content:center;padding:52px;position:relative;overflow:hidden;transition:all 0.2s}
+
+/* Themes */
+.t-dark{background:#0d0d1a;color:#fff}
+.t-light{background:#fff;color:#111;border:1px solid #e5e5e5}
+.t-gradient{background:linear-gradient(135deg,#7c6fea,#3a2d8f);color:#fff}
+.t-minimal{background:#f8f8f8;color:#222;border:1px solid #ddd}
+.t-ocean{background:linear-gradient(135deg,#0a2342,#1a5276);color:#fff}
+
+.slide-tag{font-size:10px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;opacity:0.4;margin-bottom:10px}
+.slide-title{font-size:clamp(18px,3.5vw,32px);font-weight:600;line-height:1.2;margin-bottom:14px;letter-spacing:-0.3px}
+.slide-subtitle{font-size:clamp(12px,1.8vw,16px);opacity:0.6;margin-bottom:18px;line-height:1.5}
+.slide-bullets{list-style:none;display:flex;flex-direction:column;gap:10px}
+.slide-bullets li{font-size:clamp(11px,1.6vw,14px);opacity:0.82;padding-left:18px;position:relative;line-height:1.55}
+.slide-bullets li::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.t-gradient .slide-bullets li::before,.t-ocean .slide-bullets li::before{background:rgba(255,255,255,0.65)}
+.t-light .slide-bullets li::before,.t-minimal .slide-bullets li::before{background:#7c6fea}
+.slide-num{position:absolute;bottom:16px;right:20px;font-size:10px;opacity:0.22;font-weight:500}
+.slide-watermark{position:absolute;bottom:16px;left:20px;font-size:9px;opacity:0.2;letter-spacing:0.05em}
+.note-bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;padding:8px 20px;transform:translateY(100%);transition:transform 0.2s;backdrop-filter:blur(4px)}
+.slide:hover .note-bar{transform:translateY(0)}
+
+.between-ad{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:9px 18px;display:flex;align-items:center;gap:14px}
+.between-ad .ad-text{flex:1;font-size:12px;color:var(--muted);text-align:center}
+.between-ad a{font-size:11px;color:var(--accent);text-decoration:none;white-space:nowrap}
+
+.dots{display:flex;justify-content:center;gap:5px;padding:10px;flex-wrap:wrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border2);cursor:pointer;border:none;transition:all 0.15s}
+.dot.on{background:var(--accent);width:16px;border-radius:3px}
+.key-hint{font-size:10px;color:var(--muted);text-align:center;padding-bottom:10px}
+
+/* ── MODAL ── */
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal-wrap.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:380px;width:100%}
+.modal h2{font-size:18px;font-weight:600;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.65}
+.modal input{width:100%;padding:10px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit;margin-bottom:10px;outline:none}
+.modal input:focus{border-color:var(--accent)}
+.modal-hint{font-size:11px;color:var(--muted);margin-bottom:18px}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;padding:11px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:8px;font-family:inherit;transition:background 0.15s}
+.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);padding:9px;border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:inherit}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:14px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);background:var(--surface)}
+footer a{color:var(--muted);text-decoration:none}
+footer span{margin:0 8px}
+
+@media(max-width:600px){
+  #homeScreen,#viewerScreen{flex-direction:column}
+  .home-sidebar,.viewer-sidebar{width:100%;border-left:none;border-top:1px solid var(--border);flex-direction:row;overflow-x:auto;height:80px}
+  .sidebar-tall{display:none}
+  .hero h1{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+<header>
+  <div class="logo"><span>Slide</span>AI</div>
+  <!-- AD SLOT 1: Replace with Google AdSense 728x90 leaderboard -->
+  <div class="ad-slot" style="width:220px;height:36px;flex-direction:row;gap:8px;border-radius:6px">
+    <span class="ad-label">Ad</span>
+    <span class="ad-text" style="font-size:10px">728×90 leaderboard — paste AdSense code here</span>
+  </div>
+  <div class="header-tag">Free forever</div>
+</header>
+
+<!-- ══ HOME SCREEN ══ -->
+<div class="screen active" id="homeScreen">
+  <div class="home-main">
+    <div class="hero">
+      <h1>Turn any idea into a<br><em>beautiful presentation</em></h1>
+      <p>Free AI presentation maker. No sign-up. No credit card.<br>Just type a topic and get slides in seconds.</p>
+    </div>
+
+    <div class="card">
+      <textarea id="promptInput" placeholder="e.g. Pitch deck for a UI/UX design agency in Kerala..." rows="3"></textarea>
+      <div class="card-footer">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="slideCount">
+            <option value="4">4 slides</option>
+            <option value="6" selected>6 slides</option>
+            <option value="8">8 slides</option>
+            <option value="10">10 slides</option>
+          </select>
+          <div class="pills">
+            <button class="pill on" onclick="setTheme('dark',this)">Dark</button>
+            <button class="pill" onclick="setTheme('light',this)">Light</button>
+            <button class="pill" onclick="setTheme('gradient',this)">Gradient</button>
+            <button class="pill" onclick="setTheme('minimal',this)">Minimal</button>
+            <button class="pill" onclick="setTheme('ocean',this)">Ocean</button>
+          </div>
+        </div>
+        <button class="btn-gen" id="genBtn" onclick="handleGenerate()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Generate free
+        </button>
+      </div>
+    </div>
+
+    <!-- AD SLOT 2: Replace with AdSense in-feed / native unit -->
+    <div class="ad-slot in-feed-ad">
+      <span class="ad-label">Ad</span>
+      <span class="ad-text">In-feed native ad (300×100) — highest click-through rate — paste AdSense native code here</span>
+    </div>
+
+    <div class="api-hint">
+      No API key? <button onclick="openApiModal()">Add your Anthropic key</button> to generate unlimited slides.
+    </div>
+  </div>
+
+  <div class="home-sidebar">
+    <span class="ad-label">Sponsored</span>
+    <!-- AD SLOT 3: Replace with AdSense 160x600 wide skyscraper -->
+    <div class="ad-slot sidebar-tall" style="flex:1;min-height:260px">
+      <span class="ad-label">Advertisement</span>
+      <span class="ad-text">160×600<br>wide skyscraper<br><br>Paste AdSense<br>code here</span>
+    </div>
+    <!-- AD SLOT 4: Replace with AdSense 160x160 small square -->
+    <div class="ad-slot" style="height:110px">
+      <span class="ad-label">Ad</span>
+      <span class="ad-text">160×160<br>square</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOADING SCREEN ══ -->
+<div class="screen" id="loadScreen">
+  <div class="spinner"></div>
+  <div class="load-title">Generating your presentation...</div>
+  <div class="load-step" id="loadStep">Analyzing your topic</div>
+  <!-- AD SLOT 5: BEST EARNING — user stares at this for ~8 seconds -->
+  <!-- Replace with AdSense 336x280 large rectangle -->
+  <div class="ad-slot load-ad">
+    <span class="ad-label">Advertisement</span>
+    <span class="ad-text">336×280 large rectangle<br>Shown while AI generates<br>Users stare here for 5–10 seconds<br>→ Highest earning placement</span>
+  </div>
+</div>
+
+<!-- ══ VIEWER SCREEN ══ -->
+<div class="screen" id="viewerScreen">
+  <div class="viewer-main">
+    <div class="toolbar">
+      <div class="nav">
+        <button class="nav-btn" onclick="prevSlide()">←</button>
+        <span class="counter" id="counter">1 / 6</span>
+        <button class="nav-btn" onclick="nextSlide()">→</button>
+      </div>
+      <!-- AD SLOT 6: Replace with AdSense 468x60 banner -->
+      <div class="ad-slot tool-ad">
+        <span class="ad-label">Ad</span>
+        <span class="ad-text" style="font-size:10px">468×60 toolbar banner</span>
+      </div>
+      <div class="exports">
+        <button class="btn-exp" onclick="exportPPT()">⬇ PPT</button>
+        <button class="btn-exp" onclick="exportPDF()">⬇ PDF</button>
+        <button class="btn-new" onclick="goHome()">+ New</button>
+      </div>
+    </div>
+
+    <div class="canvas">
+      <div class="slide t-dark" id="slideEl"></div>
+    </div>
+
+    <!-- AD SLOT 7: Replace with AdSense responsive unit — refreshes on every slide click -->
+    <div class="between-ad">
+      <span class="ad-label">Ad</span>
+      <span class="ad-text" id="betweenAdText">728×90 between-slide banner — refreshes every navigation — paste AdSense here</span>
+      <a href="#">Learn more →</a>
+    </div>
+
+    <div class="dots" id="dots"></div>
+    <div class="key-hint">Use ← → arrow keys to navigate slides</div>
+  </div>
+
+  <div class="viewer-sidebar">
+    <span class="ad-label">Sponsored</span>
+    <!-- AD SLOT 8: Replace with AdSense 160x600 -->
+    <div class="ad-slot sidebar-tall" style="flex:1;min-height:260px">
+      <span class="ad-label">Advertisement</span>
+      <span class="ad-text">160×600<br>viewer sidebar<br><br>Paste AdSense<br>code here</span>
+    </div>
+    <div class="ad-slot" style="height:110px">
+      <span class="ad-label">Ad</span>
+      <span class="ad-text">160×160</span>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Made by <a href="https://algorythma.in" target="_blank">Algorythma</a>
+  <span>·</span>
+  <a href="#">Privacy</a>
+  <span>·</span>
+  <a href="#">Terms</a>
+  <span>·</span>
+  Free AI tool — supported by ads
+</footer>
+</div>
+
+<!-- API KEY MODAL -->
+<div class="modal-wrap" id="apiModal">
+  <div class="modal">
+    <h2>Your Anthropic API key</h2>
+    <p>Enter your key from console.anthropic.com. It's stored only in your browser — never sent anywhere else.</p>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..."/>
+    <p class="modal-hint">Get a free key at console.anthropic.com → API Keys</p>
+    <button class="btn-primary" onclick="saveApiKey()">Save key and generate</button>
+    <button class="btn-ghost" onclick="closeApiModal()">Cancel</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script>
+// ── STATE ──
+let slides = [];
+let idx = 0;
+let theme = 'dark';
+let apiKey = localStorage.getItem('slideai_key') || '';
+
+// ── THEME ──
+function setTheme(t, el) {
+  theme = t;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── SCREENS ──
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goHome() { show('homeScreen'); slides = []; idx = 0; }
+
+// ── API MODAL ──
+function openApiModal() { document.getElementById('apiModal').classList.add('open'); }
+function closeApiModal() { document.getElementById('apiModal').classList.remove('open'); }
+function saveApiKey() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if (!k.startsWith('sk-ant-')) { alert('Please enter a valid Anthropic API key (starts with sk-ant-)'); return; }
+  apiKey = k;
+  localStorage.setItem('slideai_key', k);
+  closeApiModal();
+  alert('Key saved! Click Generate to create your presentation.');
+}
+
+// ── LOADING MESSAGES ──
+const loadMsgs = [
+  'Analyzing your topic...',
+  'Structuring the narrative...',
+  'Writing slide content...',
+  'Designing layouts...',
+  'Almost ready...'
+];
+
+// ── BETWEEN SLIDE ADS ──
+const betweenAds = [
+  'Figma for Students — free Pro plan →',
+  'Google UX Design Certificate — start free →',
+  'Notion AI — write faster, think clearer →',
+  'Canva Pro — design anything in minutes →',
+  'Adobe Creative Cloud — 60% off students →',
+];
+
+// ── GENERATE ──
+async function handleGenerate() {
+  const prompt = document.getElementById('promptInput').value.trim();
+  if (!prompt) { document.getElementById('promptInput').focus(); return; }
+  if (!apiKey) { openApiModal(); return; }
+
+  show('loadScreen');
+  let mi = 0;
+  const loadInt = setInterval(() => {
+    document.getElementById('loadStep').textContent = loadMsgs[mi % loadMsgs.length];
+    mi++;
+  }, 1400);
+
+  const count = document.getElementById('slideCount').value;
+  const system = `You are a professional presentation designer. Return ONLY a valid JSON array. No markdown fences, no explanation, no text before or after.
+Generate exactly ${count} slides for the topic the user gives.
+Each slide is a JSON object with these exact keys:
+- "title": string (the slide headline, max 8 words)
+- "subtitle": string (a one-line tagline, only for slide 1, empty string "" for all other slides)  
+- "bullets": array of exactly 3 strings (key points, max 12 words each)
+- "layout": string, one of: "hero", "content", "quote", "split"
+- "tag": string (section label like "01 — Introduction" or "03 — Solution")
+- "note": string (one sentence speaker note for the presenter)
+Return only the JSON array starting with [ and ending with ].`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1500,
+        system,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    let text = data.content[0].text.replace(/```json|```/g, '').trim();
+    slides = JSON.parse(text);
+    if (!Array.isArray(slides) || !slides.length) throw new Error('bad format');
+  } catch (e) {
+    console.error(e);
+    slides = buildDemo(prompt, parseInt(count));
+  }
+
+  clearInterval(loadInt);
+  idx = 0;
+  buildDots();
+  renderSlide();
+  show('viewerScreen');
+}
+
+// ── DEMO SLIDES (fallback if no API key) ──
+function buildDemo(prompt, count) {
+  const secs = ['Introduction','The Problem','Our Solution','Key Features','Market Opportunity','The Team','Roadmap','Next Steps'];
+  return Array.from({ length: count }, (_, i) => ({
+    title: i === 0 ? (prompt.substring(0, 45) || 'Your Presentation') : (secs[i] || `Section ${i+1}`),
+    subtitle: i === 0 ? 'A presentation generated by SlideAI — algorythma.in' : '',
+    bullets: [
+      'First key insight — your content appears here',
+      'Second supporting point with real data',
+      'Third takeaway or call to action'
+    ],
+    layout: i === 0 ? 'hero' : 'content',
+    tag: `${String(i+1).padStart(2,'0')} — ${secs[i] || 'Section'}`,
+    note: `Talk about ${(secs[i] || 'this section').toLowerCase()} here. Add your own context.`
+  }));
+}
+
+// ── RENDER ──
+function buildDots() {
+  document.getElementById('dots').innerHTML = slides.map((_, i) =>
+    `<button class="dot${i===0?' on':''}" onclick="goTo(${i})" aria-label="Slide ${i+1}"></button>`
+  ).join('');
+}
+
+function renderSlide() {
+  if (!slides.length) return;
+  const s = slides[idx];
+  const el = document.getElementById('slideEl');
+  el.className = `slide t-${theme}`;
+  el.innerHTML = `
+    <div class="slide-tag">${s.tag || ''}</div>
+    <div class="slide-title">${s.title || ''}</div>
+    ${s.subtitle ? `<div class="slide-subtitle">${s.subtitle}</div>` : ''}
+    <ul class="slide-bullets">
+      ${(s.bullets || []).map(b => `<li>${b}</li>`).join('')}
+    </ul>
+    <div class="slide-num">${idx + 1}</div>
+    <div class="slide-watermark">SlideAI by Algorythma</div>
+    ${s.note ? `<div class="note-bar">🎤 ${s.note}</div>` : ''}
+  `;
+  document.getElementById('counter').textContent = `${idx+1} / ${slides.length}`;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === idx));
+  document.getElementById('betweenAdText').textContent = betweenAds[idx % betweenAds.length];
+}
+
+function nextSlide() { if (idx < slides.length - 1) { idx++; renderSlide(); } }
+function prevSlide() { if (idx > 0) { idx--; renderSlide(); } }
+function goTo(i) { idx = i; renderSlide(); }
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('viewerScreen').classList.contains('active')) {
+    if (e.key === 'ArrowRight') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+  }
+});
+
+// ── EXPORT PPT ──
+function exportPPT() {
+  if (!slides.length) { alert('Generate a presentation first!'); return; }
+  const pptx = new PptxGenJS();
+  const bgMap = { dark:'0d0d1a', light:'ffffff', gradient:'5a4fd4', minimal:'f8f8f8', ocean:'0a2342' };
+  const tcMap = { dark:'ffffff', light:'111111', gradient:'ffffff', minimal:'222222', ocean:'ffffff' };
+  const bg = bgMap[theme] || '0d0d1a';
+  const tc = tcMap[theme] || 'ffffff';
+
+  slides.forEach((s, i) => {
+    const sl = pptx.addSlide();
+    sl.background = { color: bg };
+    sl.addText(s.tag || `Slide ${i+1}`, { x:0.5,y:0.25,w:9,h:0.3,fontSize:8,color:'777777',bold:true });
+    sl.addText(s.title, { x:0.5,y:0.65,w:9,h:1.3,fontSize:28,bold:true,color:tc,wrap:true });
+    if (s.subtitle) sl.addText(s.subtitle, { x:0.5,y:1.95,w:9,h:0.5,fontSize:14,color:'aaaaaa',italic:true });
+    (s.bullets||[]).forEach((b,bi) => {
+      sl.addText(`•  ${b}`, { x:0.6,y:2.65+(bi*0.58),w:8.8,h:0.5,fontSize:13,color:tc,wrap:true });
+    });
+    sl.addText('SlideAI by Algorythma', { x:0.5,y:5.1,w:6,h:0.3,fontSize:8,color:'444444' });
+    sl.addText(`${i+1}`, { x:9,y:5.1,w:0.5,h:0.3,fontSize:8,color:'555555',align:'right' });
+  });
+
+  pptx.writeFile({ fileName: 'SlideAI-presentation.pptx' });
+}
+
+// ── EXPORT PDF ──
+function exportPDF() {
+  alert('To save as PDF:\n\n1. Press Ctrl+P  (Mac: Cmd+P)\n2. Change destination to "Save as PDF"\n3. Layout → Landscape\n4. Click Save\n\nTip: For better quality, use a screen capture tool or integrate html2canvas.');
+}
+</script>
+</body>
+</html>
